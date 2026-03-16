@@ -1,0 +1,220 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+local player = Players.LocalPlayer
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NoclipToggleGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local introFrame = Instance.new("Frame")
+introFrame.Size = UDim2.new(1, 0, 1, 0)
+introFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+introFrame.BackgroundTransparency = 1
+introFrame.BorderSizePixel = 0
+introFrame.ZIndex = 100
+introFrame.Parent = screenGui
+
+local creditLabel = Instance.new("TextLabel")
+creditLabel.Size = UDim2.new(0.8, 0, 0, 60)
+creditLabel.Position = UDim2.new(0.5, 0, 0.45, 0)
+creditLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+creditLabel.BackgroundTransparency = 1
+creditLabel.Text = "made by 0qh7 on discord"
+creditLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+creditLabel.Font = Enum.Font.SourceSansBold
+creditLabel.TextSize = 40
+creditLabel.TextTransparency = 1
+creditLabel.TextXAlignment = Enum.TextXAlignment.Center
+creditLabel.Parent = introFrame
+
+local snowflakes = {}
+local function createSnowflake()
+	local flake = Instance.new("TextLabel")
+	flake.Text = "❄"
+	flake.BackgroundTransparency = 1
+	flake.TextColor3 = Color3.fromRGB(255, 255, 255)
+	flake.TextSize = math.random(10, 25)
+	flake.Size = UDim2.new(0, flake.TextSize, 0, flake.TextSize)
+	flake.Position = UDim2.new(math.random(), 0, -0.1, 0)
+	flake.Font = Enum.Font.SourceSans
+	flake.ZIndex = 101
+	flake.Parent = introFrame
+	return {
+		flake = flake,
+		speed = math.random(5, 15) / 1000,
+		sway = math.random(-20, 20) / 1000,
+		swayTime = math.random(0, 100)
+	}
+end
+for i = 1, 80 do
+	table.insert(snowflakes, createSnowflake())
+end
+
+local snowConnection = RunService.RenderStepped:Connect(function()
+	for _, data in ipairs(snowflakes) do
+		local flake = data.flake
+		local pos = flake.Position
+		data.swayTime = data.swayTime + 0.1
+		local sway = math.sin(data.swayTime) * data.sway
+		flake.Position = UDim2.new(pos.X.Scale + sway, 0, pos.Y.Scale + data.speed, 0)
+		if pos.Y.Scale > 1.1 then
+			flake.Position = UDim2.new(math.random(), 0, -0.1, 0)
+		end
+	end
+end)
+
+local tweenInfo = TweenInfo.new(1.5, Enum.EasingStyle.Sine)
+local fadeInBg = TweenService:Create(introFrame, tweenInfo, {BackgroundTransparency = 0.7})
+local fadeInText = TweenService:Create(creditLabel, tweenInfo, {TextTransparency = 0})
+fadeInBg:Play()
+fadeInText:Play()
+
+task.wait(5)
+
+local fadeOutBg = TweenService:Create(introFrame, tweenInfo, {BackgroundTransparency = 1})
+local fadeOutText = TweenService:Create(creditLabel, tweenInfo, {TextTransparency = 1})
+fadeOutBg:Play()
+fadeOutText:Play()
+
+task.wait(1.5)
+
+snowConnection:Disconnect()
+for _, data in ipairs(snowflakes) do
+	data.flake:Destroy()
+end
+introFrame:Destroy()
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 250, 0, 150)
+mainFrame.Position = UDim2.new(0.5, -125, 0.5, -75)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Parent = screenGui
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0, 40)
+titleLabel.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+titleLabel.Text = "Noclip Toggle"
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.TextSize = 20
+titleLabel.Parent = mainFrame
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Size = UDim2.new(0.8, 0, 0, 50)
+toggleButton.Position = UDim2.new(0.1, 0, 0.45, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+toggleButton.Text = "Noclip: OFF"
+toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 24
+toggleButton.Parent = mainFrame
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -35, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.TextSize = 18
+closeButton.Parent = mainFrame
+
+local noclipEnabled = false
+local noclipConnection = nil
+
+local function updateNoclip()
+	if noclipEnabled then
+		if noclipConnection then noclipConnection:Disconnect() end
+		noclipConnection = RunService.Stepped:Connect(function()
+			local character = player.Character
+			if character then
+				for _, part in ipairs(character:GetDescendants()) do
+					if part:IsA("BasePart") then
+						part.CanCollide = false
+					end
+				end
+			end
+		end)
+	else
+		if noclipConnection then
+			noclipConnection:Disconnect()
+			noclipConnection = nil
+		end
+		local character = player.Character
+		if character then
+			for _, part in ipairs(character:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = true
+				end
+			end
+		end
+	end
+end
+
+toggleButton.MouseButton1Click:Connect(function()
+	noclipEnabled = not noclipEnabled
+	if noclipEnabled then
+		toggleButton.Text = "Noclip: ON"
+		toggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+	else
+		toggleButton.Text = "Noclip: OFF"
+		toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+	end
+	updateNoclip()
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+	if noclipConnection then noclipConnection:Disconnect() end
+	screenGui:Destroy()
+end)
+
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+mainFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = mainFrame.Position
+		local conn
+		conn = input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+				conn:Disconnect()
+			end
+		end)
+	end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if dragging and dragInput then
+		local delta = dragInput.Position - dragStart
+		mainFrame.Position = UDim2.new(
+			startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y
+		)
+	end
+end)
+
+player.CharacterAdded:Connect(function()
+	if noclipEnabled then
+		task.wait(0.1)
+		updateNoclip()
+	end
+end)
+
+print("Noclip GUI made by 0qh7 on discord. DM For questions.")
