@@ -1,0 +1,310 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NoclipToggleGUI"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+local introFrame = Instance.new("Frame")
+introFrame.Size = UDim2.new(1, 0, 1, 0)
+introFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+introFrame.BackgroundTransparency = 1
+introFrame.ZIndex = 100
+introFrame.Parent = screenGui
+
+local blur = Instance.new("BlurEffect")
+blur.Size = 36
+blur.Parent = game:GetService("Lighting")
+
+local creditLabel = Instance.new("TextLabel")
+creditLabel.Size = UDim2.new(0.8, 0, 0, 60)
+creditLabel.Position = UDim2.new(0.5, 0, 0.45, 0)
+creditLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+creditLabel.BackgroundTransparency = 1
+creditLabel.Text = "made by 0qh7 on discord"
+creditLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+creditLabel.Font = Enum.Font.SourceSansBold
+creditLabel.TextSize = 40
+creditLabel.TextTransparency = 1
+creditLabel.Parent = introFrame
+
+local snowflakes = {}
+local function createSnowflake()
+    local flake = Instance.new("TextLabel")
+    flake.Text = "❄"
+    flake.BackgroundTransparency = 1
+    flake.TextColor3 = Color3.fromRGB(255, 255, 255)
+    flake.TextSize = math.random(35, 60)
+    flake.Size = UDim2.new(0, flake.TextSize, 0, flake.TextSize)
+    flake.Position = UDim2.new(math.random(), 0, -0.1, 0)
+    flake.Font = Enum.Font.SourceSans
+    flake.ZIndex = 101
+    flake.Parent = introFrame
+    return {
+        flake = flake,
+        speed = math.random(4, 9) / 1000,
+        sway = math.random(-12, 12) / 1000,
+        swayTime = math.random(0, 80)
+    }
+end
+
+for i = 1, 25 do
+    table.insert(snowflakes, createSnowflake())
+end
+
+local snowConnection = RunService.RenderStepped:Connect(function()
+    for _, data in ipairs(snowflakes) do
+        local flake = data.flake
+        local pos = flake.Position
+        data.swayTime = data.swayTime + 0.08
+        local sway = math.sin(data.swayTime) * data.sway
+        flake.Position = UDim2.new(pos.X.Scale + sway, 0, pos.Y.Scale + data.speed, 0)
+        if pos.Y.Scale > 1.1 then
+            flake.Position = UDim2.new(math.random(), 0, -0.1, 0)
+        end
+    end
+end)
+
+local tweenInfo = TweenInfo.new(1.8, Enum.EasingStyle.Sine)
+TweenService:Create(introFrame, tweenInfo, {BackgroundTransparency = 0.55}):Play()
+TweenService:Create(creditLabel, tweenInfo, {TextTransparency = 0}):Play()
+
+task.wait(5)
+
+local fadeOut = TweenInfo.new(1.2, Enum.EasingStyle.Sine)
+TweenService:Create(introFrame, fadeOut, {BackgroundTransparency = 1}):Play()
+TweenService:Create(creditLabel, fadeOut, {TextTransparency = 1}):Play()
+
+task.wait(1.3)
+snowConnection:Disconnect()
+for _, data in ipairs(snowflakes) do data.flake:Destroy() end
+introFrame:Destroy()
+blur:Destroy()
+
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "MainFrame"
+mainFrame.Size = UDim2.new(0, 280, 0, 160)
+mainFrame.Position = UDim2.new(0.5, -140, 0.5, -80)
+mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 22)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Visible = true
+mainFrame.Parent = screenGui
+
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 12)
+
+local gradient = Instance.new("UIGradient")
+gradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 35)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(45, 45, 55)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 30, 35))
+})
+gradient.Rotation = 45
+gradient.Parent = mainFrame
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 45)
+title.BackgroundColor3 = Color3.fromRGB(15, 15, 18)
+title.Text = "NOCLIP TOGGLE"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 22
+title.Parent = mainFrame
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 12)
+
+local stroke = Instance.new("UIStroke")
+stroke.Thickness = 2
+stroke.Transparency = 0.4
+stroke.Color = Color3.fromRGB(255, 100, 100)
+stroke.Parent = title
+
+local toggle = Instance.new("TextButton")
+toggle.Size = UDim2.new(0.85, 0, 0, 55)
+toggle.Position = UDim2.new(0.5, 0, 0.52, 0)
+toggle.AnchorPoint = Vector2.new(0.5, 0.5)
+toggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+toggle.Text = "NOCLIP: OFF"
+toggle.TextColor3 = Color3.fromRGB(255, 255, 255)
+toggle.Font = Enum.Font.GothamBold
+toggle.TextSize = 26
+toggle.Parent = mainFrame
+Instance.new("UICorner", toggle).CornerRadius = UDim.new(0, 10)
+
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(0.85, 0, 0, 20)
+credit.Position = UDim2.new(0.5, 0, 0.82, 0)
+credit.AnchorPoint = Vector2.new(0.5, 0.5)
+credit.BackgroundTransparency = 1
+credit.Text = "DM 0qh7 on Discord for questions"
+credit.TextColor3 = Color3.fromRGB(180, 180, 180)
+credit.Font = Enum.Font.Gotham
+credit.TextSize = 14
+credit.Parent = mainFrame
+
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 32, 0, 32)
+closeBtn.Position = UDim2.new(1, -38, 0, 8)
+closeBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+closeBtn.Text = "×"
+closeBtn.TextColor3 = Color3.fromRGB(220, 220, 220)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 24
+closeBtn.Parent = mainFrame
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1, 0)
+
+local animationConnections = {}
+local hue = 0
+local gradientOffset = 0
+
+animationConnections[#animationConnections+1] = RunService.Heartbeat:Connect(function(dt)
+    hue = (hue + dt * 0.15) % 1
+    stroke.Color = Color3.fromHSV(hue, 1, 1)
+end)
+
+animationConnections[#animationConnections+1] = RunService.Heartbeat:Connect(function(dt)
+    gradientOffset = (gradientOffset + dt * 0.2) % 1
+    gradient.Offset = Vector2.new(0, gradientOffset)
+end)
+
+--[[
+====================================================== __ =================
+  _________  ________  _  __   _      ______ ______   / /_  ___  ________ 
+ / ___/ __ \/ ___/ _ \| |/_/  | | /| / / __ `/ ___/  / __ \/ _ \/ ___/ _ \
+/ /__/ /_/ / /  /  __/>  <    | |/ |/ / /_/ (__  )  / / / /  __/ /  /  __/
+\___/\____/_/   \___/_/|_|    |__/|__/\__,_/____/  /_/ /_/\___/_/   \___/ 
+============================================================================
+--]]
+
+local pulseTween
+local function startPulse()
+    if pulseTween then pulseTween:Cancel() end
+    pulseTween = TweenService:Create(toggle, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1), {
+        Size = UDim2.new(0.87, 0, 0, 57)
+    })
+    pulseTween:Play()
+end
+startPulse()
+
+local noclipEnabled = false
+local noclipConn
+local savedCollision = {}
+
+local function enableNoclip()
+    if noclipConn then noclipConn:Disconnect() end
+    local character = player.Character
+    if not character then return end
+
+    savedCollision = {}
+    for _, v in ipairs(character:GetDescendants()) do
+        if v:IsA("BasePart") then
+            savedCollision[v] = v.CanCollide
+            v.CanCollide = false
+        end
+    end
+
+    noclipConn = RunService.Stepped:Connect(function()
+        local char = player.Character
+        if not char then return end
+        for _, v in ipairs(char:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+        end
+    end)
+end
+
+local function disableNoclip()
+    if noclipConn then
+        noclipConn:Disconnect()
+        noclipConn = nil
+    end
+    local character = player.Character
+    if not character then return end
+    for _, v in ipairs(character:GetDescendants()) do
+        if v:IsA("BasePart") then
+            local original = savedCollision[v]
+            if original ~= nil then
+                v.CanCollide = original
+            else
+                v.CanCollide = false
+            end
+        end
+    end
+    savedCollision = {}
+end
+
+local function toggleNoclip()
+    noclipEnabled = not noclipEnabled
+    if noclipEnabled then
+        enableNoclip()
+        toggle.Text = "NOCLIP: ON"
+        toggle.BackgroundColor3 = Color3.fromRGB(60, 220, 80)
+    else
+        disableNoclip()
+        toggle.Text = "NOCLIP: OFF"
+        toggle.BackgroundColor3 = Color3.fromRGB(220, 60, 60)
+    end
+end
+
+toggle.MouseButton1Click:Connect(toggleNoclip)
+
+closeBtn.MouseButton1Click:Connect(function()
+    if noclipConn then noclipConn:Disconnect() end
+    for _, conn in ipairs(animationConnections) do conn:Disconnect() end
+    if pulseTween then pulseTween:Cancel() end
+    screenGui:Destroy()
+end)
+
+local dragging = false
+local dragInput, dragStart, startPos
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+
+mainFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if dragging and dragInput then
+        local delta = dragInput.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+player.CharacterAdded:Connect(function()
+    if noclipEnabled then
+        enableNoclip()
+    end
+end)
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.KeyCode == Enum.KeyCode.G then
+        mainFrame.Visible = not mainFrame.Visible
+    end
+end)
+
+print("Noclip GUI made by 0qh7 on discord | Press G to show/hide")
